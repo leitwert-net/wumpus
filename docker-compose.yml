@@ -1,0 +1,82 @@
+# TRACE_THE_WUMPUS
+# Copyright (C) 2014-2025 Leitwert GmbH
+#
+# This software is distributed under the terms of the MIT license.
+# It can be found in the LICENSE file or at https://opensource.org/licenses/MIT.
+#
+# Author Johann SCHLAMP <schlamp@leitwert.net>
+#
+#  ┌─────────┐
+#  │ INSTALL │
+#  └─────────┘
+#
+#    • Install required software (docker and docker-compose):
+#      ~# apt-get install docker.io docker-compose-v2
+#
+#    NOTE: To build the docker container, an Internet connection is needed
+#          for obtaining the docker base image (python:slim) and additional
+#          software via apt-get and pip.
+#
+#  ┌─────────┐
+#  │ STARTUP │
+#  └─────────┘
+#
+#    • Build docker container
+#      ~$ docker compose build
+#
+#    • Run the framework
+#      ~$ docker compose up
+#
+#    • Point your traceroute tool to the WUMPUS quest
+#      ~$ traceroute6 wumpus.quest
+#
+#    NOTE: No changes should be required to the configuration below.
+#
+name: wumpus
+
+services:
+
+  wumpus:
+
+    container_name: wumpus
+    image: wumpus
+    build:
+      target: wumpus
+      dockerfile: ../wumpus/Dockerfile
+      context: ../wumpus
+
+    command: bash runner.sh
+    working_dir: /srv/wumpus/sh
+
+    volumes:
+      - type: bind
+        source: ./src
+        target: /srv/wumpus/src
+      - type: bind
+        source: ../wumpus/src/wumpus
+        target: /srv/wumpus/src/wumpus
+        read_only: true
+
+    networks:
+      wumpus:
+        ipv6_address: 2a06:2904::2
+        ipv4_address: 194.145.125.130
+
+networks:
+
+  wumpus:
+
+    driver_opts:
+      com.docker.network.bridge.name: wumpus
+    enable_ipv6: true 
+
+    ipam:
+      config:
+
+        - subnet: 2a06:2904::/30
+          ip_range: 2a06:2904::/30
+          gateway: 2a06:2904::1
+
+        - subnet: 194.145.125.128/25
+          ip_range: 194.145.125.128/25
+          gateway: 194.145.125.129
